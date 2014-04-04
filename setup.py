@@ -57,7 +57,7 @@ SOURCES.extend(path_join("lib", bn + ".cc") for bn in [
     "read_parsers", "kmer_hash", "hashtable", "hashbits", "labelhash",
     "counting", "subset", "read_aligner", "hllcounter"])
 
-EXTRA_COMPILE_ARGS = ['-O3', '-lcrypto -lssl']
+EXTRA_COMPILE_ARGS = ['-O3']
 
 if sys.platform == 'darwin':
     EXTRA_COMPILE_ARGS.extend(['-arch', 'x86_64'])  # force 64bit only builds
