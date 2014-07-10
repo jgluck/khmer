@@ -49,14 +49,15 @@ BZIP2DIR = 'third-party/bzip2'
 BUILD_DEPENDS = []
 BUILD_DEPENDS.extend(path_join("lib", bn + ".hh") for bn in [
     "khmer", "khmer_config", "kmer_hash", "hashtable", "counting",
-    "hashbits", "labelhash", "hllcounter", "MurmurHash3", "sha1"])
+    "hashbits", "labelhash", "hllcounter"])
 
 SOURCES = ["khmer/_khmermodule.cc"]
 SOURCES.extend(path_join("lib", bn + ".cc") for bn in [
     "khmer_config", "thread_id_map", "trace_logger", "perf_metrics",
     "read_parsers", "kmer_hash", "hashtable", "hashbits", "labelhash",
-    "counting", "subset", "read_aligner", "hllcounter", "MurmurHash3",
-    "sha1"])
+    "counting", "subset", "read_aligner", "hllcounter"])
+SOURCES.extend(path_join("third-party", "smhasher", bn + ".cc") for bn in [
+    "MurmurHash3", "sha1"])
 
 EXTRA_COMPILE_ARGS = ['-O3']
 
