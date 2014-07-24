@@ -1,3 +1,8 @@
+2014-09-16  Michael Wright  <wrig517@msu.edu>
+
+    * tests/test_scipts.py: Attained complete testing coverage for 
+    test_filter_abund.
+
 2014-07-23  Ryan R. Boyce  <boycerya@msu.edu>
 
     * Makefile: fixed >80 character line wrap-around
