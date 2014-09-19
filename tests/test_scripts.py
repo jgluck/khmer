@@ -578,6 +578,39 @@ def test_load_graph_fail():
     assert "ERROR:" in err
 
 
+def test_load_graph_write_fp():
+    script = scriptpath('load-graph.py')
+    args = ['-x', '1e5', '-N', '2', '-k', '20', '-w']  # use small HT
+
+    outfile = utils.get_temp_filename('out')
+    infile = utils.get_test_data('random-20-a.fa')
+
+    args.extend([outfile, infile])
+
+    (status, out, err) = utils.runscript(script, args)
+
+    ht_file = outfile + '.pt'
+    assert os.path.exists(ht_file), ht_file
+
+    info_file = outfile + '.info'
+    assert os.path.exists(info_file), info_file
+    data = [x.strip() for x in open(info_file)]
+    data = set(data)
+    assert '3959 unique k-mers' in data
+    assert 'false positive rate estimated to be 0.002' in data
+
+
+def test_load_graph_multithread():
+    script = scriptpath('load-graph.py')
+
+    outfile = utils.get_temp_filename('test')
+    infile = utils.get_test_data('test-reads.fa')
+
+    args = ['-N', '4', '-x', '1e9', '-T', '8', outfile, infile]
+
+    (status, out, err) = utils.runscript(script, args)
+
+
 def _make_graph(infilename, min_hashsize=1e7, n_hashes=2, ksize=20,
                 do_partition=False,
                 annotate_partitions=False,

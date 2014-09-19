@@ -22,6 +22,7 @@
 #include "counting.hh"
 #include "read_aligner.hh"
 #include "labelhash.hh"
+#include "khmer_exception.hh"
 
 using namespace khmer;
 
@@ -73,8 +74,12 @@ _common_init_Type(
     PyTypeObject &tobj, char const * name, char const * doc
 )
 {
-    assert( name );
-    assert( doc );
+    if (!name) {
+        throw khmer_exception();
+    }
+    if (!doc) {
+        throw khmer_exception();
+    }
 
     tobj.ob_size        = 0;
     tobj.ob_type        = &PyType_Type;
@@ -650,6 +655,13 @@ _ReadParser_new( PyTypeObject * subtype, PyObject * args, PyObject * kwds )
             )) {
         return NULL;
     }
+    if (number_of_threads < 1) {
+        PyErr_SetString(
+            PyExc_ValueError,
+            "Invalid thread number, must be integer greater than zero."
+        );
+        return NULL;
+    }
     // TODO: Handle keyword arguments.
     std:: string    ifile_name( ifile_name_CSTR );
 
@@ -669,7 +681,6 @@ _ReadParser_new( PyTypeObject * subtype, PyObject * args, PyObject * kwds )
         PyErr_SetString( PyExc_ValueError, "invalid input file name" );
         return NULL;
     }
-
     return self;
 }
 
@@ -1356,6 +1367,13 @@ static PyObject * hash_get(PyObject * self, PyObject * args)
         count = counting->get_count((unsigned int) pos);
     } else if (PyString_Check(arg)) {
         std::string s = PyString_AsString(arg);
+
+        if (strlen(s.c_str()) < counting->ksize()) {
+            PyErr_SetString(PyExc_ValueError,
+                            "string length must >= the counting table k-mer size");
+            return NULL;
+        }
+
         count = counting->get_count(s.c_str());
     }
 
@@ -2317,6 +2335,13 @@ static PyObject * hashbits_get(PyObject * self, PyObject * args)
         count = hashbits->get_count((unsigned int) pos);
     } else if (PyString_Check(arg)) {
         std::string s = PyString_AsString(arg);
+
+        if (strlen(s.c_str()) < hashbits->ksize()) {
+            PyErr_SetString(PyExc_ValueError,
+                            "string length must >= the presence table k-mer size");
+            return NULL;
+        }
+
         count = hashbits->get_count(s.c_str());
     } else {
         PyErr_SetString(PyExc_ValueError, "must pass in an int or string");
@@ -3112,7 +3137,9 @@ static PyObject * hashbits_subset_partition_size_distribution(PyObject * self,
         }
         PyList_SET_ITEM(x, i, value);
     }
-    assert (i == d.size());
+    if (!(i == d.size())) {
+        throw khmer_exception();
+    }
 
     PyObject * returnValue = Py_BuildValue("NI", x, n_unassigned);
     if (returnValue == NULL) {
@@ -3793,7 +3820,9 @@ static PyObject * subset_partition_size_distribution(PyObject * self,
         }
         Py_XDECREF(tup);
     }
-    assert (i == d.size());
+    if (!(i == d.size())) {
+        throw khmer_exception();
+    }
 
     PyObject * ret = Py_BuildValue("OI", x, n_unassigned);
     Py_DECREF(x);
@@ -4628,6 +4657,22 @@ static PyObject * set_reporting_callback(PyObject * self, PyObject * args)
 }
 
 //
+// technique for resolving literal below found here:
+// https://gcc.gnu.org/onlinedocs/gcc-4.9.1/cpp/Stringification.html
+//
+
+static
+PyObject *
+get_version_cpp( PyObject * self, PyObject * args )
+{
+#define xstr(s) str(s)
+#define str(s) #s
+    std::string dVersion = xstr(VERSION);
+    return PyString_FromString(dVersion.c_str());
+}
+
+
+//
 // Module machinery.
 //
 
@@ -4678,9 +4723,12 @@ static PyMethodDef KhmerMethods[] = {
     },
     {
         "set_reporting_callback",   set_reporting_callback,
-        METH_VARARGS,       ""
+        METH_VARARGS,       "",
     },
-
+    {
+        "get_version_cpp", get_version_cpp,
+        METH_VARARGS, "return the VERSION c++ compiler option"
+    },
     { NULL, NULL, 0, NULL } // sentinel
 };
 

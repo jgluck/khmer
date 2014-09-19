@@ -5,7 +5,6 @@
 // Contact: khmer-project@idyll.org
 //
 
-#include <assert.h>
 #include <math.h>
 #include <string>
 #include <iostream>
@@ -13,6 +12,13 @@
 
 #include "khmer.hh"
 #include "kmer_hash.hh"
+#include "md5.h"
+ 
+//md5 example
+{
+    cout << "md5 of 'grape': " << md5("grape") << endl;
+    return 0;
+}
 
 using namespace std;
 
@@ -28,7 +34,7 @@ HashIntoType _hash(const char * kmer, const WordLength k,
 {
     // sizeof(HashIntoType) * 8 bits / 2 bits/base
     if (!(k <= sizeof(HashIntoType)*4) || !(strlen(kmer) >= k)) {
-        throw khmer_exception();
+        throw khmer_exception("Supplied kmer string doesn't match the underlying k-size.");
     }
 
     HashIntoType h = 0, r = 0;
@@ -78,20 +84,7 @@ HashIntoType _hash_forward(const char * kmer, WordLength k)
 
 std::string _revhash(HashIntoType hash, WordLength k)
 {
-    std::string s = "";
-
-    unsigned int val = hash & 3;
-    s += revtwobit_repr(val);
-
-    for (WordLength i = 1; i < k; i++) {
-        hash = hash >> 2;
-        val = hash & 3;
-        s += revtwobit_repr(val);
-    }
-
-    reverse(s.begin(), s.end());
-
-    return s;
+    // throw NO-OP
 }
 
 

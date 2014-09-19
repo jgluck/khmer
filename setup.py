@@ -19,8 +19,10 @@ from setuptools.command.build_ext import build_ext as _build_ext
 from distutils.spawn import spawn
 from distutils.sysconfig import get_config_vars
 from distutils.dist import Distribution
+from distutils.errors import DistutilsPlatformError
 
 import versioneer
+versioneer.VCS = 'git'
 versioneer.versionfile_source = 'khmer/_version.py'
 versioneer.versionfile_build = 'khmer/_version.py'
 versioneer.tag_prefix = 'v'  # tags are like v1.2.0
@@ -44,16 +46,7 @@ os.environ['OPT'] = " ".join(
 ZLIBDIR = 'third-party/zlib'
 BZIP2DIR = 'third-party/bzip2'
 
-EXTRA_OBJS = []
-EXTRA_OBJS.extend(path_join("third-party", "zlib", bn + ".lo") for bn in [
-    "adler32", "compress", "crc32", "deflate", "gzclose", "gzlib", "gzread",
-    "gzwrite", "infback", "inffast", "inflate", "inftrees", "trees", "uncompr",
-    "zutil"])
-EXTRA_OBJS.extend(path_join("third-party", "bzip2", bn + ".o") for bn in [
-    "blocksort", "huffman", "crctable", "randtable", "compress", "decompress",
-    "bzlib"])
-
-BUILD_DEPENDS = list(EXTRA_OBJS)
+BUILD_DEPENDS = []
 BUILD_DEPENDS.extend(path_join("lib", bn + ".hh") for bn in [
     "khmer", "khmer_config", "kmer_hash", "hashtable", "counting",
     "hashbits", "labelhash"])
@@ -73,7 +66,6 @@ EXTENSION_MOD_DICT = \
     {
         "sources": SOURCES,
         "extra_compile_args": EXTRA_COMPILE_ARGS,
-        "extra_objects": EXTRA_OBJS,
         "depends": BUILD_DEPENDS,
         "language": "c++",
         "define_macros": [("VERSION", versioneer.get_version()), ],
@@ -86,13 +78,22 @@ SCRIPTS.extend([path_join("scripts", script)
                 for script in os_listdir("scripts")
                 if script.endswith(".py")])
 
-INSTALL_REQUIRES = ["screed >= 0.7.1"]
-
-try:
-    import argparse
-    del argparse
-except ImportError:
-    INSTALL_REQUIRES.append("argparse >= 1.2.1")
+CLASSIFIERS = [
+    "Environment :: Console",
+    "Environment :: MacOS X",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 2.7",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+if "-rc" in versioneer.get_version():
+    CLASSIFIERS.append("Development Status :: 4 - Beta")
+else:
+    CLASSIFIERS.append("Development Status :: 5 - Production/Stable")
 
 SETUP_METADATA = \
     {
@@ -112,8 +113,9 @@ SETUP_METADATA = \
         "url": 'http://ged.msu.edu/',
         "packages": ['khmer', 'khmer.tests'],
         "package_dir": {'khmer.tests': 'tests'},
-        "install_requires": INSTALL_REQUIRES,
-        "extras_require": {'docs': ['sphinx', 'sphinxcontrib-autoprogram'],
+        "install_requires": ['screed >= 0.7.1'],
+        "extras_require": {':python_version=="2.6"': ['argparse>=1.2.1'],
+                           'docs': ['sphinx', 'sphinxcontrib-autoprogram'],
                            'tests': ['nose >= 1.0']},
         "scripts": SCRIPTS,
         "ext_modules": [EXTENSION_MOD, ],
@@ -121,20 +123,7 @@ SETUP_METADATA = \
         # "license": '', # empty as is conveyed by the classifier below
         "include_package_data": True,
         "zip_safe": False,
-        "classifiers": [
-            "Development Status :: 5 - Production/Stable",
-            "Environment :: Console",
-            "Environment :: MacOS X",
-            "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: BSD License",
-            "Natural Language :: English",
-            "Operating System :: POSIX :: Linux",
-            "Operating System :: MacOS :: MacOS X",
-            "Programming Language :: C",
-            "Programming Language :: C++",
-            "Programming Language :: Python :: 2.7",
-            "Topic :: Scientific/Engineering :: Bio-Informatics",
-        ],
+        "classifiers": CLASSIFIERS
     }
 
 
@@ -148,18 +137,28 @@ class KhmerBuildExt(_build_ext):  # pylint: disable=R0904
     """
 
     def run(self):
-        if "z" and "bz2" not in self.libraries:
+        if "%x" % sys.maxsize != '7fffffffffffffff':
+            raise DistutilsPlatformError("%s require 64-bit operating system" %
+                                         SETUP_METADATA["packages"])
+
+        if "z" not in self.libraries:
             zcmd = ['bash', '-c', 'cd ' + ZLIBDIR + ' && ( test Makefile -nt'
                     ' configure || bash ./configure --static ) && make -f '
                     'Makefile.pic PIC']
             spawn(cmd=zcmd, dry_run=self.dry_run)
+            self.extensions[0].extra_objects.extend(
+                path_join("third-party", "zlib", bn + ".lo") for bn in [
+                    "adler32", "compress", "crc32", "deflate", "gzclose",
+                    "gzlib", "gzread", "gzwrite", "infback", "inffast",
+                    "inflate", "inftrees", "trees", "uncompr", "zutil"])
+        if "bz2" not in self.libraries:
             bz2cmd = ['bash', '-c', 'cd ' + BZIP2DIR + ' && make -f '
                       'Makefile-libbz2_so all']
             spawn(cmd=bz2cmd, dry_run=self.dry_run)
-        else:
-            for ext in self.extensions:
-                ext.extra_objects = []
-
+            self.extensions[0].extra_objects.extend(
+                path_join("third-party", "bzip2", bn + ".o") for bn in [
+                    "blocksort", "huffman", "crctable", "randtable",
+                    "compress", "decompress", "bzlib"])
         _build_ext.run(self)
 
 CMDCLASS.update({'build_ext': KhmerBuildExt})

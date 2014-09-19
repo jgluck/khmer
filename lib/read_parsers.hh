@@ -9,7 +9,6 @@
 #define READ_PARSERS_HH
 
 
-#include <cassert>
 #include <cstdarg>
 #include <iostream>
 #include <string>
@@ -125,7 +124,7 @@ struct IStreamReader {
 #ifdef WITH_INTERNAL_METRICS
     StreamReaderPerformanceMetrics  pmetrics;
 #endif
-    IStreamReader( );
+    IStreamReader(int const fd );
     virtual ~IStreamReader( );
 
     size_t const		    get_memory_alignment( ) const;
@@ -144,6 +143,7 @@ protected:
     bool			    _at_eos;
 
     void			    _set_EOS_ATOMIC( );
+    int				    _file_descriptor;
 
 };
 
@@ -156,10 +156,6 @@ struct RawStreamReader : public IStreamReader {
     virtual uint64_t const  read_into_cache(
         uint8_t * const cache, uint64_t const cache_size
     );
-
-protected:
-
-    int			    _stream_handle;
 
 };
 
@@ -490,7 +486,9 @@ protected:
         uint32_t	thread_id	= _thread_id_map.get_thread_id( );
         ParserState *	state_PTR	= NULL;
 
-        assert( NULL != _states );
+        if(!( NULL != _states )) {
+            throw khmer_exception();
+        }
 
         state_PTR = _states[ thread_id ];
         if (NULL == state_PTR) {
@@ -538,7 +536,9 @@ inline PartitionID _parse_partition_id(std::string name)
 {
     PartitionID p = 0;
     const char * s = name.c_str() + name.length() - 1;
-    assert(*(s + 1) == (unsigned int) NULL);
+    if (!(*(s + 1) == (unsigned int) NULL)) {
+        throw khmer_exception();
+    }
 
     while(*s != '\t' && s >= name.c_str()) {
         s--;
@@ -548,7 +548,7 @@ inline PartitionID _parse_partition_id(std::string name)
         p = (PartitionID) atoi(s + 1);
     } else {
         std::cerr << "consume_partitioned_fasta barfed on read "  << name << "\n";
-        assert(0);
+        throw khmer_exception();
     }
 
     return p;
