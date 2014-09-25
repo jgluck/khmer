@@ -166,8 +166,6 @@ void ReadAligner::Enumerate(
         } else if (kmerCov < m_trusted_cutoff) {
             start_state = MATCH_UNTRUSTED;
             end_state = INSERT_GRAPH_UNTRUSTED;
-            //match_sc = m_sm.untrusted_match;
-            //mismatch_sc = m_sm.untrusted_mismatch;
             match_sc = m_sm.trusted_match;
             mismatch_sc = m_sm.trusted_mismatch;
         } else {
@@ -184,12 +182,13 @@ void ReadAligner::Enumerate(
             State next_state = static_cast<State>(next_state_iter);
             trans = get_trans(curr->state, next_state);
             hcost = m_sm.tsc[get_trans(next_state, MATCH)]
-                    + (m_sm.tsc[MM] + m_sm.trusted_match)
+		    // + m_sm.trusted_match // Test!
+                    + (m_sm.tsc[MM] /*+ m_sm.trusted_match*/)
                     * ((remaining == 0) ?
                        0 : (remaining - 1));
 
             if(trans == disallowed) {
-                continue;
+                continue; // ????
             }
 
             if(next_state == MATCH || next_state == MATCH_UNTRUSTED) {
@@ -220,14 +219,14 @@ void ReadAligner::Enumerate(
                 next->num_indels = curr->num_indels + 1;
             }
 
-            next->score = curr->score + sc + m_sm.tsc[trans];
+            next->score = curr->score + /* sc */ + m_sm.tsc[trans];
             next->trusted = (kmerCov >= m_trusted_cutoff);
             next->h_score = hcost;
             next->f_score = next->score + next->h_score;
 
             // TODO(fishjord) make max indels tunable)
             if (next->num_indels < 3
-                    && next->score - GetNull(next->length) > next->length * m_bits_theta) {
+                   /* && next->score - GetNull(next->length) > next->length * m_bits_theta*/) {
                 open.push(next);
                 all_nodes.push_back(next);
             } else {
@@ -262,14 +261,14 @@ Alignment* ReadAligner::Subalign(AlignmentNode* start_vert,
 {
     std::vector<AlignmentNode*> all_nodes;
     NodeHeap open;
-    std::map<AlignmentNode, unsigned int> closed;
+//    std::map<AlignmentNode, unsigned int> closed;
     open.push(start_vert);
 
     AlignmentNode* curr = NULL;
     AlignmentNode* best = NULL;
     std::map<AlignmentNode, unsigned int>::iterator tmp;
 
-    unsigned int times_closed = 0;
+//    unsigned int times_closed = 0;
 
     while (!open.empty()) {
         curr = open.top();
@@ -297,7 +296,7 @@ Alignment* ReadAligner::Subalign(AlignmentNode* start_vert,
             break;
         }
 
-        tmp = closed.find(*curr);
+/*        tmp = closed.find(*curr);
         if(tmp == closed.end()) {  //Hasn't been closed yet
             //do nothing
             times_closed = 0;
@@ -315,7 +314,7 @@ Alignment* ReadAligner::Subalign(AlignmentNode* start_vert,
             continue;
         }
 
-        closed[*curr] = times_closed + 1;
+        closed[*curr] = times_closed + 1; */
 
         Enumerate(open, all_nodes, curr, forward, seq);
     }
@@ -460,7 +459,8 @@ Alignment* ReadAligner::Align(const std::string& read)
                   << start.kmer_idx + k - 1
                   << " emission: " << start.kmer[k - 1] << std::endl;
 #endif
-        char base = toupper(start.kmer[k - 1]);
+	// the base on the startingNode is never queried
+	char base = toupper(start.kmer[k - 1]);
         Nucl e = A;
         switch(base) {
         case 'A':
@@ -488,16 +488,19 @@ Alignment* ReadAligner::Align(const std::string& read)
         size_t final_length = 0;
 
         if(start.k_cov >= m_trusted_cutoff) {
-            startingNode.score = k * m_sm.trusted_match + k * m_sm.tsc[MM];
+            startingNode.score = /* k * m_sm.trusted_match + */ k * m_sm.tsc[MM];
         } else {
-            startingNode.score = k * m_sm.untrusted_match + k * m_sm.tsc[MM];
+            startingNode.score = /* k * m_sm.untrusted_match + */ k * m_sm.tsc[MM];
         }
 
         forward = Subalign(&startingNode, read.length(), true, read);
         final_length = forward->read_alignment.length() + k;
 
-        startingNode.seq_idx = start.kmer_idx;
-        reverse = Subalign(&startingNode, read.length(), false, read);
+	// Going the other way? Flip to the other side of the k-mer.
+	// No need to update the base, it is never queried.
+        startingNode.seq_idx = start.kmer_idx; 
+
+	reverse = Subalign(&startingNode, read.length(), false, read);
         final_length += reverse->read_alignment.length();
 
         Alignment* ret = new Alignment;
