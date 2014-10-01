@@ -14,7 +14,7 @@ def test_alignnocov():
     for i in range(20):
         ch.consume("AGAGGGAAAGCTAGGTTCGACAAGTCCTTGACAGAT")
     ch.consume("ACCTAGGTTCGACATGTACC")
-    score, graphAlign, readAlign, trunc = aligner.align(read)
+    score, graphAlign, readAlign, trunc, seed = aligner.align(read)
 
     # should be the same
     eq_(readAlign, 'ACCTAGGTTCGACATGTACC')
@@ -31,7 +31,7 @@ def test_simple_readalign():
     ch.consume("GCTTTTAAAAAGGTTCGACAAAGGCCCGGG")
     # CCCGGGCCTTTGTCGAACCTTTTTAAAAGC
 
-    score, graphAlign, readAlign, trunc = aligner.align(read)
+    score, graphAlign, readAlign, trunc, seed = aligner.align(read)
 
 #                        AGCTAGGTTCGACAAGT CCT
 #                        ACCTAGGTTCGACAAGTaCC
@@ -50,7 +50,7 @@ def test_readalign():
 
     ch.consume("GCTTTTAAAAAGGTTCGACAAAGGCCCGGG")
 
-    score, graphAlign, readAlign, trunc = aligner.align(read)
+    score, graphAlign, readAlign, trunc, seed = aligner.align(read)
 
     eq_(readAlign, 'ACCTAGGTTCGACATGTACC')
     eq_(graphAlign, 'AGCTAGGTTCGACAAGTCCT')
@@ -214,7 +214,7 @@ queries = [
 ]
 
 def check_query(aligner, query):
-    score, graphAlign, readAlign, trunc = aligner.align(query["seq"])
+    score, graphAlign, readAlign, trunc, seed = aligner.align(query["seq"])
     print query["seq"]
     print graphAlign, query["graph_aln"]
     print readAlign, query["read_aln"]

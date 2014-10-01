@@ -182,8 +182,8 @@ void ReadAligner::Enumerate(
             State next_state = static_cast<State>(next_state_iter);
             trans = get_trans(curr->state, next_state);
             hcost = m_sm.tsc[get_trans(next_state, MATCH)]
-		    // + m_sm.trusted_match // Test!
-                    + (m_sm.tsc[MM] /*+ m_sm.trusted_match*/)
+		    + m_sm.trusted_match
+                    + (m_sm.tsc[MM] + m_sm.trusted_match)
                     * ((remaining == 0) ?
                        0 : (remaining - 1));
 
@@ -219,14 +219,14 @@ void ReadAligner::Enumerate(
                 next->num_indels = curr->num_indels + 1;
             }
 
-            next->score = curr->score + /* sc */ + m_sm.tsc[trans];
+            next->score = curr->score + sc + m_sm.tsc[trans];
             next->trusted = (kmerCov >= m_trusted_cutoff);
             next->h_score = hcost;
             next->f_score = next->score + next->h_score;
 
             // TODO(fishjord) make max indels tunable)
             if (next->num_indels < 3
-                   /* && next->score - GetNull(next->length) > next->length * m_bits_theta*/) {
+                   && next->score - GetNull(next->length) > next->length * m_bits_theta) {
                 open.push(next);
                 all_nodes.push_back(next);
             } else {
@@ -488,9 +488,9 @@ Alignment* ReadAligner::Align(const std::string& read)
         size_t final_length = 0;
 
         if(start.k_cov >= m_trusted_cutoff) {
-            startingNode.score = /* k * m_sm.trusted_match + */ k * m_sm.tsc[MM];
+            startingNode.score = k * m_sm.trusted_match + k * m_sm.tsc[MM];
         } else {
-            startingNode.score = /* k * m_sm.untrusted_match + */ k * m_sm.tsc[MM];
+            startingNode.score = k * m_sm.untrusted_match + k * m_sm.tsc[MM];
         }
 
         forward = Subalign(&startingNode, read.length(), true, read);
@@ -513,6 +513,7 @@ Alignment* ReadAligner::Align(const std::string& read)
                                start.kmer + forward->graph_alignment;
         ret->score = ret->score -  GetNull(final_length);
         ret->truncated = forward->truncated || reverse->truncated;
+	ret->seed_kmer_idx = start.kmer_idx;
 
 #if READ_ALIGNER_DEBUG
         fprintf(stderr,

@@ -53,11 +53,12 @@ def main():
             print >>sys.stderr, name
             print >>sys.stderr, seq
 
-            score, graph_alignment, read_alignment, truncated = aligner.align(seq)
+            score, graph_alignment, read_alignment, truncated, seed_kmer_idx = aligner.align(seq)
             print >>sys.stderr, score
             print >>sys.stderr, graph_alignment
             print >>sys.stderr, read_alignment
             print >>sys.stderr, truncated
+            print >>sys.stderr, seed_kmer_idx
             print ">{0}\n{1}".format(name, graph_alignment)
 
 if __name__ == '__main__':

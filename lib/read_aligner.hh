@@ -127,6 +127,7 @@ struct Alignment {
     std::string trusted;
     double score;
     bool truncated;
+    size_t seed_kmer_idx;
 };
 
 

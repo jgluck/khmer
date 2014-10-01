@@ -4383,8 +4383,10 @@ static PyObject * readaligner_align(PyObject * self, PyObject * args)
 
     const char* alignment = aln->graph_alignment.c_str();
     const char* readAlignment = aln->read_alignment.c_str();
-    PyObject * ret = Py_BuildValue("dssO", aln->score, alignment,
-                                   readAlignment, (aln->truncated)? Py_True : Py_False);
+    PyObject * ret = Py_BuildValue("dssOn", aln->score, alignment,
+                                   readAlignment,
+				   (aln->truncated)? Py_True : Py_False,
+				   aln->seed_kmer_idx);
     delete aln;
 
     return ret;
