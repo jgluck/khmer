@@ -182,7 +182,7 @@ void ReadAligner::Enumerate(
             State next_state = static_cast<State>(next_state_iter);
             trans = get_trans(curr->state, next_state);
             hcost = m_sm.tsc[get_trans(next_state, MATCH)]
-		    + m_sm.trusted_match
+                    + m_sm.trusted_match
                     + (m_sm.tsc[MM] + m_sm.trusted_match)
                     * ((remaining == 0) ?
                        0 : (remaining - 1));
@@ -226,7 +226,7 @@ void ReadAligner::Enumerate(
 
             // TODO(fishjord) make max indels tunable)
             if (next->num_indels < 3
-                   && next->score - GetNull(next->length) > next->length * m_bits_theta) {
+                    && next->score - GetNull(next->length) > next->length * m_bits_theta) {
                 open.push(next);
                 all_nodes.push_back(next);
             } else {
@@ -296,25 +296,25 @@ Alignment* ReadAligner::Subalign(AlignmentNode* start_vert,
             break;
         }
 
-/*        tmp = closed.find(*curr);
-        if(tmp == closed.end()) {  //Hasn't been closed yet
-            //do nothing
-            times_closed = 0;
-        } else if (tmp->first.score > curr->score) { //Better than what we've closed
-            times_closed = tmp->second;
-            closed.erase(tmp);
-        } else if (tmp->first.score == curr->score) { //Same as what we've closed
-            times_closed = tmp->second;
-            closed.erase(tmp);
-        } else {
-            continue;
-        }
+        /*        tmp = closed.find(*curr);
+                if(tmp == closed.end()) {  //Hasn't been closed yet
+                    //do nothing
+                    times_closed = 0;
+                } else if (tmp->first.score > curr->score) { //Better than what we've closed
+                    times_closed = tmp->second;
+                    closed.erase(tmp);
+                } else if (tmp->first.score == curr->score) { //Same as what we've closed
+                    times_closed = tmp->second;
+                    closed.erase(tmp);
+                } else {
+                    continue;
+                }
 
-        if (times_closed > 200) {
-            continue;
-        }
+                if (times_closed > 200) {
+                    continue;
+                }
 
-        closed[*curr] = times_closed + 1; */
+                closed[*curr] = times_closed + 1; */
 
         Enumerate(open, all_nodes, curr, forward, seq);
     }
@@ -459,8 +459,8 @@ Alignment* ReadAligner::Align(const std::string& read)
                   << start.kmer_idx + k - 1
                   << " emission: " << start.kmer[k - 1] << std::endl;
 #endif
-	// the base on the startingNode is never queried
-	char base = toupper(start.kmer[k - 1]);
+        // the base on the startingNode is never queried
+        char base = toupper(start.kmer[k - 1]);
         Nucl e = A;
         switch(base) {
         case 'A':
@@ -496,11 +496,11 @@ Alignment* ReadAligner::Align(const std::string& read)
         forward = Subalign(&startingNode, read.length(), true, read);
         final_length = forward->read_alignment.length() + k;
 
-	// Going the other way? Flip to the other side of the k-mer.
-	// No need to update the base, it is never queried.
-        startingNode.seq_idx = start.kmer_idx; 
+        // Going the other way? Flip to the other side of the k-mer.
+        // No need to update the base, it is never queried.
+        startingNode.seq_idx = start.kmer_idx;
 
-	reverse = Subalign(&startingNode, read.length(), false, read);
+        reverse = Subalign(&startingNode, read.length(), false, read);
         final_length += reverse->read_alignment.length();
 
         Alignment* ret = new Alignment;
@@ -513,7 +513,7 @@ Alignment* ReadAligner::Align(const std::string& read)
                                start.kmer + forward->graph_alignment;
         ret->score = ret->score -  GetNull(final_length);
         ret->truncated = forward->truncated || reverse->truncated;
-	ret->seed_kmer_idx = start.kmer_idx;
+        ret->seed_kmer_idx = start.kmer_idx;
 
 #if READ_ALIGNER_DEBUG
         fprintf(stderr,

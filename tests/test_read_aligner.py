@@ -7,6 +7,7 @@ import khmer
 from nose.tools import assert_almost_equals
 from nose.tools import eq_
 
+
 def test_alignnocov():
     ch = khmer.new_counting_hash(10, 1048576, 1)
     read = "ACCTAGGTTCGACATGTACC"
@@ -200,8 +201,8 @@ queries = [
         "TAACAACCTCTTTAC",
         "truncated": False
     },
-    { # the motif of 32 bases are identical match to HT seqs, the rest are random
-      # "TTAAATGCCCAATTTTTCCCTCTTTTCTTCTAT" is the from HT seqs
+    {  # the motif of 32 bases are identical match to HT seqs, the rest are random
+        # "TTAAATGCCCAATTTTTCCCTCTTTTCTTCTAT" is the from HT seqs
         "seq":
         "ACAAGGCCATTTGTTCGCATTCTGAAGCCGGCTTCCACCATGGTACTGGGAAACTGTCGGAATATTAAATGCCCAATTTTTCCCTCTTTTCTTCTATCCGCAGTATGGACACTGTTTTCCTGAATTTCATTGACAGTTTAATTTACTGCGGTCACGCGGAACT",
         "score": 68.17022311739733,
@@ -210,8 +211,9 @@ queries = [
         "read_aln": "TTAAATGCCCAATTTTTCCCTCTTTTCTTCTAT",
         "truncated": True,
         "description": "truncated-alignment-bc-missing-kmers"
-   }
+    }
 ]
+
 
 def check_query(aligner, query):
     score, graphAlign, readAlign, trunc, seed = aligner.align(query["seq"])
@@ -221,11 +223,12 @@ def check_query(aligner, query):
     print trunc, query["truncated"]
     print score, query["score"]
     assert graphAlign == query["graph_aln"], "\n%r != \n%r" % \
-               (graphAlign, query["graph_aln"])
+        (graphAlign, query["graph_aln"])
     assert readAlign == query["read_aln"], "\n%r != \n%r" % \
-               (readAlign, query["read_aln"])
+        (readAlign, query["read_aln"])
     eq_(trunc, query["truncated"])
     assert_almost_equals(score, query["score"])
+
 
 def test_readalign_new():
     ch = khmer.new_counting_hash(32, 1048576, 1)
@@ -237,4 +240,3 @@ def test_readalign_new():
         if query.has_key("description"):
             check_query.description = query["description"]
         yield check_query, aligner, query
-

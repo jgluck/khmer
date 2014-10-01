@@ -1991,9 +1991,9 @@ static PyObject * hash_abundance_distribution_with_reads_parser(
 
     read_parsers:: IParser * rparser = rparser_obj->parser;
     Hashbits * hashbits = tracking_obj->hashbits;
-		
-		// cppcheck-suppress unreadVariable
-    HashIntoType * dist = NULL;  
+
+    // cppcheck-suppress unreadVariable
+    HashIntoType * dist = NULL;
 
     Py_BEGIN_ALLOW_THREADS
     dist = counting->abundance_distribution(rparser, hashbits);
@@ -4385,8 +4385,8 @@ static PyObject * readaligner_align(PyObject * self, PyObject * args)
     const char* readAlignment = aln->read_alignment.c_str();
     PyObject * ret = Py_BuildValue("dssOn", aln->score, alignment,
                                    readAlignment,
-				   (aln->truncated)? Py_True : Py_False,
-				   aln->seed_kmer_idx);
+                                   (aln->truncated)? Py_True : Py_False,
+                                   aln->seed_kmer_idx);
     delete aln;
 
     return ret;
