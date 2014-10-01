@@ -12,13 +12,6 @@
 
 #include "khmer.hh"
 #include "kmer_hash.hh"
-#include "md5.h"
- 
-//md5 example
-{
-    cout << "md5 of 'grape': " << md5("grape") << endl;
-    return 0;
-}
 
 using namespace std;
 
@@ -84,7 +77,20 @@ HashIntoType _hash_forward(const char * kmer, WordLength k)
 
 std::string _revhash(HashIntoType hash, WordLength k)
 {
-    // throw NO-OP
+    std::string s = "";
+
+    unsigned int val = hash & 3;
+    s += revtwobit_repr(val);
+
+    for (WordLength i = 1; i < k; i++) {
+        hash = hash >> 2;
+        val = hash & 3;
+        s += revtwobit_repr(val);
+    }
+
+    reverse(s.begin(), s.end());
+
+    return s;
 }
 
 
