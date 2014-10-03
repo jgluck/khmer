@@ -262,6 +262,16 @@ def test_filter_stoptags():
     assert 'GGTTGACGGGGCTCAGGG' in seqs, seqs
 
 
+def test_normalize_by_median_indent():
+    infile = utils.get_test_data('paired-mixed.fa.pe')
+    hashfile = utils.get_test_data('normC20k20.kh')
+    script = scriptpath('normalize-by-median.py')
+    args = ['--loadtable', hashfile, infile]
+    (status, out, err) = utils.runscript(script, args)
+    assert status == 0, (out, err)
+    print(out, err)
+
+
 def test_normalize_by_median():
     CUTOFF = '1'
 
@@ -399,7 +409,7 @@ def test_normalize_by_median_no_bigcount():
 
     (status, out, err) = utils.runscript(script, args, in_dir)
     assert status == 0, (out, err)
-    print (out, err)
+    print(out, err)
 
     assert os.path.exists(hashfile), hashfile
     kh = khmer.load_counting_hash(hashfile)
@@ -1184,6 +1194,38 @@ def test_interleave_reads_2_fa():
         assert r.name == q.name
         assert r.sequence == q.sequence
     assert n > 0
+
+
+def test_make_initial_stoptags():
+    # gen input files using load-graph.py -t
+    # should keep test_data directory size down
+    # or something like that
+    # this assumes (obv.) load-graph works properly
+    bzinfile = utils.get_temp_filename('test-reads.fq.bz2')
+    shutil.copyfile(utils.get_test_data('test-reads.fq.bz2'), bzinfile)
+    in_dir = os.path.dirname(bzinfile)
+
+    genscript = scriptpath('load-graph.py')
+    genscriptargs = ['-t', 'test-reads', 'test-reads.fq.bz2']
+    utils.runscript(genscript, genscriptargs, in_dir)
+
+    # test input file gen'd by load-graphs
+    infile = utils.get_temp_filename('test-reads.pt')
+    infile2 = utils.get_temp_filename('test-reads.tagset', in_dir)
+
+    # get file to compare against
+    ex_outfile = utils.get_test_data('test-reads.stoptags')
+
+    # actual output file
+    outfile1 = utils.get_temp_filename('test-reads.stoptags', in_dir)
+
+    script = scriptpath('make-initial-stoptags.py')
+    # make-initial-stoptags has weird file argument syntax
+    # read the code before modifying
+    args = ['test-reads']
+
+    utils.runscript(script, args, in_dir)
+    assert os.path.exists(outfile1), outfile1
 
 
 def test_extract_paired_reads_1_fa():
