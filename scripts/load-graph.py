@@ -78,7 +78,7 @@ def main():
 
     for _, filename in enumerate(filenames):
 
-        rparser = khmer.ReadParser(filename, 1)
+        rparser = khmer.ReadParser(filename)
         print >>sys.stderr, 'consuming input', filename
         target_method(rparser)
 
