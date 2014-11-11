@@ -63,6 +63,8 @@ EXTRA_COMPILE_ARGS = ['-O3']
 
 if sys.platform == 'darwin':
     EXTRA_COMPILE_ARGS.extend(['-arch', 'x86_64'])  # force 64bit only builds
+else:
+    EXTRA_COMPILE_ARGS.extend(['-fopenmp'])
 
 EXTENSION_MOD_DICT = \
     {
@@ -72,6 +74,9 @@ EXTENSION_MOD_DICT = \
         "language": "c++",
         "define_macros": [("VERSION", versioneer.get_version()), ],
     }
+
+if sys.platform != 'darwin':
+    EXTENSION_MOD_DICT['extra_link_args'] = ['-lgomp']
 
 EXTENSION_MOD = Extension("khmer._khmermodule",  # pylint: disable=W0142
                           ** EXTENSION_MOD_DICT)

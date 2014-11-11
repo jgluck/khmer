@@ -78,8 +78,8 @@ def new_counting_hash(k, starting_size, n_tables=2, n_threads=1):
     return _new_counting_hash(k, primes, n_threads)
 
 
-def new_hll_counter(error_rate):
-    return _new_hll_counter(error_rate)
+def new_hll_counter(error_rate, ksize):
+    return _new_hll_counter(error_rate, ksize)
 
 
 def load_hashbits(filename):
