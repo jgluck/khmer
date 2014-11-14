@@ -22,6 +22,8 @@
     test_read_parsers}.py: updated tests to new error pattern (upon object
     creation, not first access) and the same API change as above. Thanks to
     Camille for her enhanced multi-thread test.
+    * lib/{counting,hashtable,ht-diff}.cc,khmer.hh: renamed MAX_COUNT define to
+    MAX_KCOUNT; avoids naming conflict with SeqAn
     * Makefile: refreshed cppcheck{,-result.xml} targets
 
 2014-10-24  Camille Scott  <camille.scott.w@gmail.com>
